@@ -1,18 +1,30 @@
 #include <stdio.h>
 #include <math.h>
 
-#define datanum 12   // データ点数
+#define datanum 4   // データ点数
 #define dim 3        // 説明変数の次元
-#define LEARNING_RATE 0.01  // 学習率
-#define LAMBDA 0.1           // L1 正則化項の係数
-#define ITERATIONS 1000      // 最大反復回数
 
 // ラッソ回帰のメイン関数
-void Lasso(double X[datanum][dim], double Y[datanum][1]) {
-    double weights[dim] = {0.0}; // 重みの初期化
+void Lasso(double X[datanum][dim], double Y[datanum][1], double Theta[dim][1], double lambda, double learning_rate, int iterations) {
+    // 重みの初期化
+    for (int i = 0; i < dim; i++) {
+        Theta[i][0] = 0.0;
+    }
     double bias = 0.0;           // バイアスの初期化
+    //転置取れたかチェック
+    printf("X=\n");
+    for (int i = 0; i < datanum; i++) {
+        for (int j = 0; j < dim; j++) {
+            printf(" %f", X[i][j]);
+        }
+        printf("\n");
+    }
+    printf("Y=\n");
+    for (int i = 0; i < datanum; i++) {
+        printf(" %f\n", Y[i][0]);
+    }
 
-    for (int iter = 0; iter < ITERATIONS; iter++) {
+    for (int iter = 0; iter < iterations; iter++) {
         double weight_gradients[dim] = {0.0};
         double bias_gradient = 0.0;
 
@@ -20,7 +32,7 @@ void Lasso(double X[datanum][dim], double Y[datanum][1]) {
         for (int i = 0; i < datanum; i++) {
             double prediction = bias;
             for (int j = 0; j < dim; j++) {
-                prediction += weights[j] * X[i][j];
+                prediction += Theta[j][0] * X[i][j];
             }
             double error = prediction - Y[i][0];
 
@@ -34,20 +46,20 @@ void Lasso(double X[datanum][dim], double Y[datanum][1]) {
         // パラメータの更新 (L1 正則化を考慮)
         for (int j = 0; j < dim; j++) {
             double grad = weight_gradients[j] / datanum;
-            if (weights[j] > 0) {
-                grad += LAMBDA;
-            } else if (weights[j] < 0) {
-                grad -= LAMBDA;
+            if (Theta[j][0] > 0) {
+                grad += lambda;
+            } else if (Theta[j][0] < 0) {
+                grad -= lambda;
             }
-            weights[j] -= LEARNING_RATE * grad;
+            Theta[j][0] -= learning_rate * grad;
         }
-        bias -= LEARNING_RATE * (bias_gradient / datanum);
+        bias -= learning_rate * (bias_gradient / datanum);
 
         // 経過表示（オプション）
         if (iter % 100 == 0) {
-            printf("Iteration %d: Weights = [", iter);
+            printf("Iteration %d: Theta = [", iter);
             for (int j = 0; j < dim; j++) {
-                printf("%.4f ", weights[j]);
+                printf("%.4f ", Theta[j][0]);
             }
             printf("], Bias = %.4f\n", bias);
         }
@@ -55,9 +67,9 @@ void Lasso(double X[datanum][dim], double Y[datanum][1]) {
 
     // 最終結果を表示
     printf("Final Parameters:\n");
-    printf("Weights: [");
+    printf("Theta: [");
     for (int j = 0; j < dim; j++) {
-        printf("%.4f ", weights[j]);
+        printf("%.4f ", Theta[j]);
     }
     printf("]\n");
     printf("Bias: %.4f\n", bias);
@@ -110,17 +122,11 @@ int main() {
         X_lsm[k][2] = x_res[i][1];
         Y_lsm[k][0] = y_res[i][0];
         if (X_lsm[datanum - 1][0] != 0.0) {
-            LSM(X_lsm, Y_lsm, Theta, 4, 0.1);
+            Lasso(X_lsm, Y_lsm, Theta, 0.10, 0.010, 1000);
         }
         X1 = Theta[0][0];
         X2 = Theta[1][0];
         X3 = Theta[2][0];
         printf("[X1, X2, X3] = [%lf, %lf, %lf]\n\n", X1, X2, X3);
     }
-}
-
-    printf("Training Lasso Regression...\n");
-    Lasso(X, Y);
-
-    return 0;
 }
