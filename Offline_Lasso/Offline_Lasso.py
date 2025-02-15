@@ -7,6 +7,12 @@ from sklearn.metrics import mean_squared_error
 import os
 import sys
 import math
+import csv
+
+##############################################################
+## 使用に当たり必要なもの
+## 目的変数及び回帰したい説明変数の時系列csvデータ(ヘッダあり)
+## バイアス項(定数項)は既にpythonパッケージ内に入ってるのでわざわざ追加する必要なし！
 
 def Obtain_Current_Directory():
     try:
@@ -28,7 +34,8 @@ def main():
     CURRENT_DIR = Obtain_Current_Directory()
 
     # データ格納
-    df = pd.read_csv(CURRENT_DIR + 'train.csv', header = 0)
+    df = pd.read_csv(CURRENT_DIR + '/data/probing_test.csv', header = 0)
+    # df = pd.read_csv(CURRENT_DIR + 'train.csv', header = 0)
     # df = pd.read_csv(CURRENT_DIR + 'test.csv', header = 0)
 
     t = np.array(df["t"])
@@ -36,21 +43,24 @@ def main():
     dx = np.array(df["dx"])
     ddx = np.array(df["ddx"])
     x2 = np.array(df["x2"])
-    dx2 = np.array(df["dx2"])
     xdx = np.array(df["xdx"])
+    dx2 = np.array(df["dx2"])
+    x3 = np.array(df["x3"])
     c = np.array(df["c"])
     f = np.array(df["f"])
     
     # print(t)
 
     # データ構成
-    X_train = [x, dx, ddx, c, x2, xdx, dx2]
+    X_train = [x, dx, ddx, x2, xdx, dx2, x3, c]
+    # X_train = [x, dx, ddx, x2, xdx, dx2, c]
     X_train = np.array(X_train).T
     y_train = f
     # print(X_train)
 
     # https://helve-blog.com/posts/python/sklearn-lasso-regression/
-    reg = Lasso(alpha=0.00000010)
+    # reg = Lasso(alpha=0.000010)
+    reg = Lasso(alpha=0.00010, fit_intercept=False)
     # 学習
     reg.fit(X_train, y_train)
     # 結果表示
@@ -58,9 +68,11 @@ def main():
     print(reg.intercept_)
     
     # # # https://datawokagaku.com/lasso/
+    # datanum = 1000
     # mse_list = []
     # coefs = []
-    # labels= ["Stiffness (K)", "Stiffness (D)", "Mass (M)", "Constant (C)", "(K2)", "(KD)", "(D2)"]
+    # intercepts = []
+    # labels= ["Stiffness (K)", "Viscosity (D)", "Mass (M)", "(K2)", "(KD)", "(D2)"]
     
     # # #case1
     # # from_alpha = 0.0010
@@ -70,7 +82,7 @@ def main():
     # to_alpha = 0.550
     
     # # alphas = np.linspace(0.000000010,0.550,100)   #1
-    # alphas = np.linspace(from_alpha, to_alpha, 1000)     #2
+    # alphas = np.linspace(from_alpha, to_alpha, datanum)     #2
     # print("alphas=")
     # print(alphas)
     # print("\n")
@@ -81,11 +93,15 @@ def main():
     #     # mse = mean_squared_error(y_test, y_pred)
     #     # mse_list.append(mse)
     #     coefs.append(model.coef_)
+    #     intercepts.append(model.intercept_)
     #     # print("model_coef=")
     #     # print(model.coef_)
     #     # plt.plot(alphas[i], coefs, label=labels[i])
     
     # coefs = np.array(coefs).T
+    # intercepts  = np.array(intercepts).T
+    
+    # # coefs_edit = np.
 
     # # 図示
     # print("Start! Drawing")
@@ -94,7 +110,7 @@ def main():
     # plt.rcParams['xtick.direction'] = 'in'#x軸の目盛線が内向き('in')か外向き('out')か双方向か('inout')
     # plt.rcParams['ytick.direction'] = 'in'#y軸の目盛線が内向き('in')か外向き('out')か双方向か('inout')
 
-    # for i in range (7):     # 
+    # for i in range (6):     # 
     #     # plt.scatter(alphas, coefs[i], label=labels[i])
     #     plt.plot(alphas, coefs[i], label=labels[i])
     # plt.rcParams['text.usetex'] = True
@@ -105,11 +121,29 @@ def main():
     # plt.ylabel('standardized coefficients')
     # # plt.tight_layout()
     # plt.legend()
-    # plt.savefig("-8-0_1000.png")
+    # plt.savefig("-8-0_10000.png")
     # # plt.savefig("-3-1_1000.png")
     # plt.show()
     # plt.clf()
     # plt.close()
+    
+    # # データ保管
+    # f = open('out.csv', 'w')
+    # data = ["alpha","Stiffness (K)", "Viscosity (D)", "Mass (M)", "(K2)", "(KD)", "(D2)", "bias"]
+    # writer = csv.writer(f)
+    # writer.writerow(data)
+    # # データ形式変更
+    # data = np.vstack([alphas, coefs])
+    # data = np.vstack([data, intercepts])
+    # data = data.T
+    # data = data.reshape([datanum,8])
+    # # data = data.tolist()
+    # print(data)
+    # for i in range(datanum):
+    #     # data = coefs[i]
+    #     writer.writerow(data[i])
+    # f.close()
+    # print("finished")
 
     # https://qiita.com/suzuki0430/items/e3958f027af1dd011f21
     # 1~100まで0.1刻みでαをかえる

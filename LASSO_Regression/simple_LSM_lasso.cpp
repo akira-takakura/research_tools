@@ -2,11 +2,11 @@
 #include <math.h>
 #include <stdlib.h>
 
-#define datanum 1000  // データ点の数
-#define dim 3         // 説明変数の次元
+#define datanum 1000        // データ点の数
+#define dim 3               // 説明変数の次元
 #define learning_rate 0.010 // 学習率
-#define lambda 0.0010    // 正則化係数
-#define iterations 1000 // 反復回数
+#define lambda 0.0010       // 正則化係数
+#define iterations 1000     // 反復回数
 
 // 関数プロトタイプ
 void Lasso(double X[datanum][dim], double Y[datanum][1], double Theta[dim + 1][1]);
