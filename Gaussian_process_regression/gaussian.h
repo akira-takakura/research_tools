@@ -1,18 +1,15 @@
-﻿/*  */
-
-/* プロトタイプ宣言 */
+﻿/* プロトタイプ宣言 */
 // ガウス過程回帰
 double Delta(double, double);
 double Delta_int(int, int);
 double Kernel_function(double, double, double[PARAM][1]);
 void Compute_kernel_matrix(double train_x[TRAIN_SIZE][1], double params[PARAM][1], double K[TRAIN_SIZE][TRAIN_SIZE]);
-void Compute_partial_kernel_matrix(double train_x[TRAIN_SIZE][1], double params[PARAM][1], double K[TRAIN_SIZE][TRAIN_SIZE],int);
+void Compute_partial_kernel_matrix(double train_x[TRAIN_SIZE][1], double params[PARAM][1], double K[TRAIN_SIZE][TRAIN_SIZE], int);
 void GPR(double[TRAIN_SIZE][1], double[TRAIN_SIZE][1], double[N][1], double[N][1], double[1][1]);
 // ハイパーパラメータの最適化
-double Compute_gradient(double[TRAIN_SIZE][1], double[TRAIN_SIZE][1], double[PARAM][1], double [PARAM][TRAIN_SIZE], int);
+double Compute_gradient(double[TRAIN_SIZE][1], double[TRAIN_SIZE][1], double[PARAM][1], int);
 void GD(double[TRAIN_SIZE][1], double[TRAIN_SIZE][1], double[PARAM][1]);
-void scg_optimize(double[TRAIN_SIZE][1], double[TRAIN_SIZE][1], double[PARAM][1]);
-void lbfgs(double*);
+void CGD(double[TRAIN_SIZE][1], double[TRAIN_SIZE][1], double[PARAM][1]);
 
 // デルタ関数 (同じ数なら1を返す)
 double Delta(double x, double xd) {
@@ -47,9 +44,6 @@ void Compute_kernel_matrix(double train_x[TRAIN_SIZE][1], double params[PARAM][1
     for (int i = 0; i < TRAIN_SIZE; i++) {
         for (int j = 0; j < TRAIN_SIZE; j++) {
             K[i][j] = Kernel_function(train_x[i][0], train_x[j][0], params);
-            if (i == j) {
-                K[i][j] += NOISE_VAR;   // ノイズの分散を加える for 逆行列演算の安定化
-            }
         }
     }
 }
@@ -85,6 +79,7 @@ void GPR(double train_x[TRAIN_SIZE][1], double train_y[TRAIN_SIZE][1], double te
     }
 }
 
+
 // 対数尤度を計算 (これを最大化したい)
 double compute_log_likelihood(double train_x[TRAIN_SIZE][1], double train_y[TRAIN_SIZE][1], double params[PARAM][1]) {
     // min L = ln(K) + y'Ky
@@ -95,81 +90,55 @@ double compute_log_likelihood(double train_x[TRAIN_SIZE][1], double train_y[TRAI
 
     Compute_kernel_matrix(train_x, params, K);  // カーネル行列を算出
     det = Determinant(K);
-    if (det < 1e-9) return -1e10;  // もし特異行列なら安全に処理
+
+    /* 場合によっては消しなね */
+    //if (det < 1e-9) return -1e10;             // もし特異行列なら安全に処理
+    //if (det < 0.010) { det = 0.010; }
+    
     inverse_matrix(K, K_inv);
     yTKy = xTAx(train_y, K_inv);      // y'* alpha
 
-
-//// Checker
-    //printf("det=%lf\n", det);
-    //printf("log(det)=%lf\n", log(det));
-    //printf("yTKy=%lf\n", yTKy);
-    //
-    //static double inv = 0.0;
-    //double inv_mat[TRAIN_SIZE][TRAIN_SIZE] = {0.0};       // 逆行列
-    //MatrixMatrix(K, K_inv, inv_mat);
-    //printf("K=\n");
-    //for (int i = 0; i < TRAIN_SIZE; i++) {
-    //    for (int j = 0; j < TRAIN_SIZE; j++) {
-    //        printf("%lf, ", K_inv[i][j]);
-    //    }
-    //    printf("\n");
-    //}
-    
     return  -log(det) - yTKy;
     //return -0.50 * TRAIN_SIZE * log(2.0 * PI) - 0.50 * log(det) - 0.50 * yTKy;
 }
 
+
 // カーネル行列の偏微分を計算
 void Compute_partial_kernel_matrix(double train_x[TRAIN_SIZE][1], double params[PARAM][1], double part_K[TRAIN_SIZE][TRAIN_SIZE], int param) {
-    part_K[TRAIN_SIZE][TRAIN_SIZE] = { 0.0 };
+    // d_tau
     if (param == 0) {
         for (int i = 0; i < TRAIN_SIZE; i++) {
             for (int j = 0; j < TRAIN_SIZE; j++) {
-                part_K[i][j] = Kernel_function(train_x[i][0], train_x[j][0], params) - params[2][0] * Delta_int(i,j);
-                if (i == j) {
-                    part_K[i][j] += NOISE_VAR;   // ノイズの分散を加える for 逆行列演算の安定化
-                }
+                part_K[i][j] = 0.0; // 明示的に初期化
+                part_K[i][j] = Kernel_function(train_x[i][0], train_x[j][0], params) - params[2][0] * Delta_int(i, j);
             }
         }
     }
+    // d_sigma
     else if (param == 1) {
         for (int i = 0; i < TRAIN_SIZE; i++) {
             for (int j = 0; j < TRAIN_SIZE; j++) {
-                part_K[i][j] = Kernel_function(train_x[i][0], train_x[j][0], params) - params[2][0] * Delta_int(i,j);
-                //printf("\nbefore partK[%d][%d] = %lf\n", i, j, part_K[i][j]);
-                 
-                part_K[i][j] *= pow(train_x[i][0] - train_x[j][0], 2.0) / params[1][0];     // 指数マイナスなので
-                //part_K[i][j] *= pow(train_x[i][0] - train_x[j][0], 2.0) * params[1][0];
-                //printf("after partK[%d][%d] = %lf\n", i, j, part_K[i][j]);
-                //printf("*= %lf\n", pow(train_x[i][0] - train_x[j][0], 2.0));
-                if (i == j) {
-                    part_K[i][j] += NOISE_VAR;   // ノイズの分散を加える for 逆行列演算の安定化
-                }
+                part_K[i][j] = 0.0; // 明示的に初期化
+                part_K[i][j] = Kernel_function(train_x[i][0], train_x[j][0], params) - params[2][0] * Delta_int(i, j);
+                part_K[i][j] *= pow(train_x[i][0] - train_x[j][0], 2.0) / params[1][0];
             }
         }
     }
+    // d_eta
     else if (param == 2) {
         for (int i = 0; i < TRAIN_SIZE; i++) {
             for (int j = 0; j < TRAIN_SIZE; j++) {
+                part_K[i][j] = 0.0; // 明示的に初期化
                 part_K[i][j] = params[2][0] * Delta_int(i, j);
             }
         }
     }
-
-    //// check
-    //printf("\n\npart_K= when param = %d", param);
-    //for (int i = 0; i < TRAIN_SIZE; i++) {
-    //    printf("\n");
-    //    for (int j = 0; j < TRAIN_SIZE; j++) {
-    //        printf("%lf ", part_K[i][j]);
-    //    }
-    //}
 }
+
 
 // 尤度関数の勾配を計算
 /* https://qiita.com/meltyyyyy/items/5a058ecc81e010876a39 */
-double Compute_gradient(double train_x[TRAIN_SIZE][1], double train_y[TRAIN_SIZE][1], double params[PARAM][1], double grad[PARAM][1], int param) {
+double Compute_gradient(double train_x[TRAIN_SIZE][1], double train_y[TRAIN_SIZE][1], double params[PARAM][1], int param) {
     double part_K_theta[TRAIN_SIZE][TRAIN_SIZE] = { 0.0 };
     double K_theta[TRAIN_SIZE][TRAIN_SIZE] = { 0.0 };
     double K_theta_inv[TRAIN_SIZE][TRAIN_SIZE] = { 0.0 };   // 逆行列
@@ -185,163 +154,140 @@ double Compute_gradient(double train_x[TRAIN_SIZE][1], double train_y[TRAIN_SIZE
     Compute_kernel_matrix(train_x, params, K_theta);
     inverse_matrix(K_theta, K_theta_inv);
 
-    //// check
-    //printf("\n\nK_theta_inv=");
-    //for (int i = 0; i < TRAIN_SIZE; i++) {
-    //    printf("\n");
-    //    for (int j = 0; j < TRAIN_SIZE; j++) {
-    //        printf("%lf ", K_theta_inv[i][j]);
-    //    }
-    //}
-
     // 1st term
-    MatrixMatrix(K_theta_inv, part_K_theta,in_trace);
+    MatrixMatrix(K_theta_inv, part_K_theta, in_trace);
     first_term = Trace(in_trace);
-    //printf("\n\n1st term = %lf\n", first_term);
-    
-    //// check
-    //printf("\nin_trace=");
-    //for (int i = 0; i < TRAIN_SIZE; i++) {
-    //    printf("\n");
-    //    for (int j = 0; j < TRAIN_SIZE; j++) {
-    //        printf("%lf ", in_trace[i][j]);
-    //    }
-    //}
 
     // 2nd term
     MatrixVector(K_theta_inv, train_y, alpha);    // alpha = K^-1 * y
-    MatrixVector(part_K_theta, alpha, beta);
-    Transpose(alpha, alpha_T);
-    second_term = InnerProduct(alpha_T, beta);
-    //printf("\n\n2nd term = %lf\n", second_term);
+    second_term = xTAx(alpha, part_K_theta);
 
-    return first_term + second_term;
+    return -1.0 * first_term + second_term;
 }
 
 // 最急降下法(GD)による最適化
-void GD(double train_x[TRAIN_SIZE][1], double train_y[TRAIN_SIZE][1], double params[PARAM][1]) {
-    double grad[PARAM][1] = { 0.0 };
-    double alpha = 0.0010;
-
+void GD(double train_x[TRAIN_SIZE][1], double train_y[TRAIN_SIZE][1], double params[PARAM][1], double params_grad[PARAM][1]) {
     // 変換 [tau, sigma, eta]
     double params_log[PARAM][1] = { log(params[0][0]), log(params[1][0]), log(params[2][0]) };
 
     // 探索 (対数)
     for (int i = 0; i < PARAM; i++) {
-        grad[i][0] = Compute_gradient(train_x, train_y, params, grad, i);   // 各パラiに対して方向決定
-        params_log[i][0] -= alpha * grad[i][0];                                 // パラメータ更新
+        params_grad[i][0] = Compute_gradient(train_x, train_y, params, i);   // 各パラiに対して方向決定
+        //printf("grad[%d] = %lf\n", i, grad[i][0]); // デバッグ用
+        params_log[i][0] += Alpha * params_grad[i][0];                                 // パラメータ更新
         params[i][0] = pow(E, params_log[i][0]);
     }
 
     //// 探索 (普通)
     //for (int i = 0; i < PARAM; i++) {
-    //    grad[i][0] = Compute_gradient(train_x, train_y, params, grad, i);   // 各パラiに対して方向決定
-    //    params[i][0] -= alpha * grad[i][0];                                 // パラメータ更新
-    //    //params[i][0] += alpha * grad[i][0];                               // パラメータ更新
+    //    params_grad[i][0] = Compute_gradient(train_x, train_y, params, i);   // 各パラiに対して方向決定
+    //    //printf("grad[%d] = %lf\n", i, grad[i][0]); // デバッグ用
+    //    params[i][0] -= Alpha * params_grad[i][0];                                 // パラメータ更新
     //}
 }
 
-// SCG法による最適化
-void scg_optimize(double train_x[TRAIN_SIZE][1], double train_y[TRAIN_SIZE][1], double params[PARAM][1]) {
-    double grad[PARAM], prev_grad[PARAM], d[PARAM], s[PARAM];
-    double beta, sigma, lambda = 1e-4, alpha, delta, gamma, mu, phi, new_L;
-    double L = compute_log_likelihood(train_x, train_y, params);
+// 共役勾配法（Conjugate Gradient Method, CG）によるハイパーパラメータ最適化
+void CGD(double train_x[TRAIN_SIZE][1], double train_y[TRAIN_SIZE][1], double params[PARAM][1], double params_grad[PARAM][1]) {
+    double grad[PARAM][1], prev_grad[PARAM][1], direction[PARAM][1], step[PARAM][1] = { 0.0 };
+    double beta, grad_norm, prev_grad_norm;
 
-    //Compute_gradient(train_x, train_y, params, grad, 1);
-
+    // tau-sigma-eta
     for (int i = 0; i < PARAM; i++) {
-        d[i] = -grad[i]; // 初期方向
-    }
+        params_grad[i][0] = -1.0 * Compute_gradient(train_x, train_y, params, i);
 
-    for (int iter = 0; iter < MAX_ITER; iter++) {
-        double grad_norm = 0.0;
-        for (int i = 0; i < PARAM; i++) grad_norm += grad[i] * grad[i];
-        grad_norm = sqrt(grad_norm);
-
-        //printf("Iteration %d: L = %.8f, Gradient Norm = %.8f\n", iter, L, grad_norm);
-
-        if (grad_norm < EPSILON) break;
-
-        //Compute_gradient(train_x, train_y, params, s);
-
-        sigma = 0.0;
-        for (int i = 0; i < PARAM; i++) sigma += d[i] * s[i];
-
-        mu = sigma + lambda * grad_norm;
-        phi = -grad_norm / mu;
-        for (int i = 0; i < PARAM; i++) params[i][0] += phi * d[i];
-
-        new_L = compute_log_likelihood(train_x, train_y, params);
-        delta = 2 * (new_L - L) / (phi * sigma);
-
-        if (delta >= 0) {
-            L = new_L;
-            //Compute_gradient(train_x, train_y, params, grad);
-            lambda *= fmax(1.0 / 3.0, 1.0 - (2.0 * delta - 1.0) * (2.0 * delta - 1.0));
-            beta = 0.0;
-            for (int i = 0; i < PARAM; i++) beta += grad[i] * (grad[i] - prev_grad[i]) / sigma;
-
-            for (int i = 0; i < PARAM; i++) {
-                d[i] = -grad[i] + beta * d[i];
-                prev_grad[i] = grad[i];
-            }
+        // 初期方向を勾配の負の方向に設定
+        for (int i = 0; i < PARAM; i++) {
+            direction[i][0] = -1.0 * params_grad[i][0];
         }
-        else {
-            lambda *= 2.0;
-            for (int i = 0; i < PARAM; i++) params[i][0] -= phi * d[i];
+
+        for (int iter = 0; iter < MAX_ITER; iter++) {
+            grad_norm = dot_product(params_grad, params_grad);
+
+            //// 収束条件: ||∇L(θ)|| < EPSILON
+            //if (sqrt(grad_norm) < EPSILON) {
+            //    printf("収束しました。反復回数: %d\n", iter);
+            //    break;
+            //}
+
+            // ステップ長 α を計算
+            //alpha = Alpha;  // 固定の学習率（ラインサーチを追加することも可能）
+
+            // 方向に沿って θ を更新
+            scalar_mult(direction, Alpha, step);   // stepを求める
+            vector_add(params, step, params);
+
+            // 新しい勾配を計算
+            prev_grad[i][0] = -1.0 * params_grad[i][0];
+
+            params_grad[i][0] = Compute_gradient(train_x, train_y, params, i);
+
+            // 共役係数 β を計算（Fletcher-Reeves法）
+            prev_grad_norm = grad_norm;
+            grad_norm = dot_product(params_grad, params_grad);
+            beta = grad_norm / prev_grad_norm;
+
+            // 新しい探索方向を更新
+            scalar_mult(direction, beta, step);
+            for (int i = 0; i < PARAM; i++) {
+                direction[i][0] = -1.0 * params_grad[i][0] + step[i][0];
+            }
+            printf("Iteration %d: Theta=[%lf, %lf, %lf], L=%lf\n", iter, params[0][0], params[1][0], params[2][0], compute_log_likelihood(train_x, train_y, params));
         }
     }
 }
 
-// L-BFGS 最適化
-void lbfgs_optimize(double train_x[TRAIN_SIZE][1], double train_y[TRAIN_SIZE][1], double params[PARAM][1]) {
-    double s[M][PARAM], y[M][PARAM], rho[M], q[PARAM], alpha[M], beta;
-    double grad[PARAM], prev_grad[PARAM], prev_params[PARAM][1];
+// スケーリング共役勾配法（Scaled Conjugate Gradient Descent, SCGD）によるハイパーパラメータ最適化
+void SCGD(double train_x[TRAIN_SIZE][1], double train_y[TRAIN_SIZE][1], double params[PARAM][1], double params_grad[PARAM][1]) {
+    double grad[PARAM][1], prev_grad[PARAM][1], direction[PARAM][1], step[PARAM][1];
+    double sigma = SIGMA, beta, grad_norm, prev_grad_norm, mu, phi, delta, new_L;
+    double L = compute_log_likelihood(train_x, train_y, params);
 
-    int iter = 0, k = 0;
-    //Compute_gradient(train_x, train_y, params, grad);
-
-    while (iter < MAX_ITER) {
-        double grad_norm = 0.0;
-        for (int i = 0; i < PARAM; i++) grad_norm += grad[i] * grad[i];
-        grad_norm = sqrt(grad_norm);
-
-        //printf("Iteration %d: Gradient Norm = %.8f\n", iter, grad_norm);
-        if (grad_norm < EPSILON) break;
-
-        for (int i = 0; i < PARAM; i++) q[i] = -grad[i];
-
-        int m_k = (k < M) ? k : M;
-        for (int i = m_k - 1; i >= 0; i--) {
-            rho[i] = 1.0 / (s[i][0] * y[i][0] + s[i][1] * y[i][1] + s[i][2] * y[i][2]);
-            alpha[i] = rho[i] * (s[i][0] * q[0] + s[i][1] * q[1] + s[i][2] * q[2]);
-            for (int j = 0; j < PARAM; j++) q[j] -= alpha[i] * y[i][j];
-        }
-
-        for (int i = 0; i < m_k; i++) {
-            beta = rho[i] * (y[i][0] * q[0] + y[i][1] * q[1] + y[i][2] * q[2]);
-            for (int j = 0; j < PARAM; j++) q[j] += s[i][j] * (alpha[i] - beta);
-        }
-
-    /* 更新 */
-        double alpha_step = 0.10;   // 学習率？
-        for (int i = 0; i < PARAM; i++) {
-            prev_params[i][0] = params[i][0];
-            prev_grad[i] = grad[i];
-            params[i][0] += alpha_step * q[i];
-        }
-
-        //Compute_gradient(train_x, train_y, params, grad);
-
-        for (int i = 0; i < PARAM; i++) {
-            s[k % M][i] = params[i][0] - prev_params[i][0];
-            y[k % M][i] = grad[i] - prev_grad[i];
-        }
-
-        k++;
-        iter++;
+    // 初期勾配を計算
+    for (int i = 0; i < PARAM; i++) {
+        grad[i][0] = Compute_gradient(train_x, train_y, params, i);
     }
 
-    //printf("最適化終了 (反復回数: %d)\n", iter);
-    //printf("最適ハイパーパラメータ: θ1=%.6f, θ2=%.6f, θ3=%.6f\n", params[0], params[1], params[2]);
+    // 初期方向を勾配の負の方向に設定
+    for (int i = 0; i < PARAM; i++) {
+        direction[i][0] = -grad[i][0];
+    }
+
+    for (int iter = 0; iter < MAX_ITER; iter++) {
+        grad_norm = dot_product(grad, grad);
+
+        // 収束条件: ||∇L(θ)|| < EPSILON
+        if (sqrt(grad_norm) < EPSILON) {
+            printf("収束しました。反復回数: %d\n", iter);
+            break;
+        }
+
+        // ステップ長 α を計算
+        mu = grad_norm + Alpha * dot_product(direction, direction);
+        phi = -grad_norm / mu;
+
+        // 方向に沿って θ を更新
+        scalar_mult(direction, phi, step);
+        vector_add(params, step, params);
+
+        // 新しい勾配を計算
+        for (int i = 0; i < PARAM; i++) {
+            prev_grad[i][0] = grad[i][0];
+            grad[i][0] = Compute_gradient(train_x, train_y, params, i);
+        }
+
+        // 共役係数 β を計算（Fletcher-Reeves法）
+        prev_grad_norm = grad_norm;
+        grad_norm = dot_product(grad, grad);
+        beta = grad_norm / prev_grad_norm;
+
+        // 新しい探索方向を更新
+        scalar_mult(direction, beta, step);
+        for (int i = 0; i < PARAM; i++) {
+            direction[i][0] = -grad[i][0] + step[i][0];
+        }
+
+        // ログ出力
+        new_L = compute_log_likelihood(train_x, train_y, params);
+        printf("Iteration %d: Theta=[%lf, %lf, %lf], L=%lf\n", iter, params[0][0], params[1][0], params[2][0], new_L);
+    }
 }

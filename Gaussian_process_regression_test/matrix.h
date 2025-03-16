@@ -1,4 +1,4 @@
-ï»¿/* Prototype decreation */
+/* Prototype decreation */
 /* Function for Matrix Product */
 double InnerProduct(double[1][TRAIN_SIZE], double[TRAIN_SIZE][1]);
 void InnerProduct_inv(double[TRAIN_SIZE][1], double[1][TRAIN_SIZE], double[TRAIN_SIZE][TRAIN_SIZE]);
@@ -38,8 +38,8 @@ void InnerProduct_inv(double m1[TRAIN_SIZE][1], double m2[1][TRAIN_SIZE], double
 /* REVISED!! CHeck */
 void MatrixVector(double m1[TRAIN_SIZE][TRAIN_SIZE], double m2[TRAIN_SIZE][1], double result[TRAIN_SIZE][1]) {
     for (int i = 0; i < TRAIN_SIZE; i++) {
-        result[i][0] = 0.0;  // åˆæœŸåŒ–ã‚’å¿˜ã‚Œãšã«
-        for (int j = 0; j < TRAIN_SIZE; j++) {  //  `TRAIN_SIZE` ã«ã™ã‚‹
+        result[i][0] = 0.0;  // ‰Šú‰»‚ğ–Y‚ê‚¸‚É
+        for (int j = 0; j < TRAIN_SIZE; j++) {  //  `TRAIN_SIZE` ‚É‚·‚é
             result[i][0] += m1[i][j] * m2[j][0];
         }
     }
@@ -91,7 +91,7 @@ void Scale(double matrix[TRAIN_SIZE][TRAIN_SIZE], double scale) {
     }
 }
 
-// å†…ç©è¨ˆç®—
+// “àÏŒvZ
 double dot_product(double* a, double* b, int size) {
     double sum = 0.0;
     for (int i = 0; i < size; i++) {
@@ -100,14 +100,14 @@ double dot_product(double* a, double* b, int size) {
     return sum;
 }
 
-// ãƒ™ã‚¯ãƒˆãƒ«ã®ã‚¹ã‚«ãƒ©ãƒ¼å€
+// ƒxƒNƒgƒ‹‚ÌƒXƒJƒ‰[”{
 void scalar_mult(double* vec, double scalar, double* result, int size) {
     for (int i = 0; i < size; i++) {
         result[i] = vec[i] * scalar;
     }
 }
 
-// ãƒ™ã‚¯ãƒˆãƒ«ã®åŠ ç®—
+// ƒxƒNƒgƒ‹‚Ì‰ÁZ
 void vector_add(double* a, double* b, double* result, int size) {
     for (int i = 0; i < size; i++) {
         result[i] = a[i] + b[i];
@@ -115,7 +115,7 @@ void vector_add(double* a, double* b, double* result, int size) {
 }
 
 
-// è¡Œåˆ—ã®ç©
+// s—ñ‚ÌÏ
 void mat_mult(double* A, double* B, double* C, int A_rows, int A_cols, int B_cols) {
     for (int i = 0; i < A_rows; i++) {
         for (int j = 0; j < B_cols; j++) {
@@ -127,115 +127,114 @@ void mat_mult(double* A, double* B, double* C, int A_rows, int A_cols, int B_col
     }
 }
 
-//
-//// é€†è¡Œåˆ—ã‚’æ±‚ã‚ã‚‹ï¼ˆã‚¬ã‚¦ã‚¹ãƒ»ã‚¸ãƒ§ãƒ«ãƒ€ãƒ³æ³•ï¼‰
-//int inverse_matrix(double matrix[TRAIN_SIZE][TRAIN_SIZE], double inverse[TRAIN_SIZE][TRAIN_SIZE]) {
-//    static double temp = 0.0;
-//
-//    for (int i = 0; i < TRAIN_SIZE; i++) {
-//        matrix[i][i] += NOISE_VAR;
-//    }
-//
-//    // æ‹¡å¼µè¡Œåˆ—ã®ä½œæˆï¼ˆå³å´ã«å˜ä½è¡Œåˆ—ã‚’è¿½åŠ ï¼‰
-//    double augmented[TRAIN_SIZE][2 * TRAIN_SIZE];
-//    for (int i = 0; i < TRAIN_SIZE; i++) {
-//        for (int j = 0; j < TRAIN_SIZE; j++) {
-//            augmented[i][j] = matrix[i][j]; // å…ƒã®è¡Œåˆ—
-//        }
-//        for (int j = TRAIN_SIZE; j < 2 * TRAIN_SIZE; j++) {
-//            augmented[i][j] = (i == j - TRAIN_SIZE) ? 1.0 : 0.0; // å˜ä½è¡Œåˆ—
-//        }
-//    }
-//
-//    // ã‚¬ã‚¦ã‚¹ãƒ»ã‚¸ãƒ§ãƒ«ãƒ€ãƒ³æ³•ã®é©ç”¨
-//    for (int i = 0; i < TRAIN_SIZE; i++) {
-//        // ãƒ”ãƒœãƒƒãƒˆã®é¸æŠï¼ˆå¯¾è§’æˆåˆ†ãŒ0ã®å ´åˆã«è¡Œã‚’å…¥ã‚Œæ›¿ãˆã‚‹ï¼‰
-//        if (fabs(augmented[i][i]) < 1e-9) {
-//            int swap_row = -1;
-//            for (int k = i + 1; k < TRAIN_SIZE; k++) {
-//                if (fabs(augmented[k][i]) > 1e-9) {
-//                    swap_row = k;
-//                    break;
-//                }
-//            }
-//            if (swap_row == -1) {
-//                return 0; // é€†è¡Œåˆ—ãªã—ï¼ˆè¡Œåˆ—ãŒç‰¹ç•°ï¼‰
-//            }
-//            // è¡Œã‚’äº¤æ›
-//            for (int j = 0; j < 2 * TRAIN_SIZE; j++) {
-//                double temp = augmented[i][j];
-//                augmented[i][j] = augmented[swap_row][j];
-//                augmented[swap_row][j] = temp;
-//            }
-//        }
-//
-//        // å¯¾è§’æˆåˆ†ã‚’1ã«ã™ã‚‹
-//        temp = augmented[i][i];
-//        for (int j = 0; j < 2 * TRAIN_SIZE; j++) {
-//            augmented[i][j] /= temp;
-//        }
-//
-//        // ä»–ã®è¡Œã®è©²å½“åˆ—ã‚’0ã«ã™ã‚‹
-//        for (int k = 0; k < TRAIN_SIZE; k++) {
-//            if (k == i) continue;
-//            temp = augmented[k][i];
-//            for (int j = 0; j < 2 * TRAIN_SIZE; j++) {
-//                augmented[k][j] -= augmented[i][j] * temp;
-//            }
-//        }
-//    }
-//
-//    // é€†è¡Œåˆ—ã‚’å–å¾—
-//    for (int i = 0; i < TRAIN_SIZE; i++) {
-//        for (int j = 0; j < TRAIN_SIZE; j++) {
-//            inverse[i][j] = augmented[i][j + TRAIN_SIZE];
-//        }
-//    }
-//
-//    return 1; // é€†è¡Œåˆ—ãŒæ±‚ã‚ã‚‰ã‚ŒãŸ
-//}
+// ‹ts—ñ‚ğ‹‚ß‚éiƒKƒEƒXEƒWƒ‡ƒ‹ƒ_ƒ“–@j
+int inverse_matrix(double matrix[TRAIN_SIZE][TRAIN_SIZE], double inverse[TRAIN_SIZE][TRAIN_SIZE]) {
+    static double temp = 0.0;
 
-
-int inverse_matrix(double X[TRAIN_SIZE][TRAIN_SIZE], double Xinv[TRAIN_SIZE][TRAIN_SIZE]) {
-//void Inverse(double X[dim][dim], double Xinv[dim][dim]) {
-    double buf;
-    //æƒãå‡ºã—æ³•
     for (int i = 0; i < TRAIN_SIZE; i++) {
-        buf = 1 / X[i][i];
+        matrix[i][i] += NOISE_VAR;
+    }
+
+    // Šg’£s—ñ‚Ìì¬i‰E‘¤‚É’PˆÊs—ñ‚ğ’Ç‰Áj
+    double augmented[TRAIN_SIZE][2 * TRAIN_SIZE];
+    for (int i = 0; i < TRAIN_SIZE; i++) {
         for (int j = 0; j < TRAIN_SIZE; j++) {
-            X[i][j] *= buf;
-            Xinv[i][j] *= buf;
+            augmented[i][j] = matrix[i][j]; // Œ³‚Ìs—ñ
         }
-        for (int j = 0; j < TRAIN_SIZE; j++) {
-            if (i != j) {
-                buf = X[j][i];
-                for (int k = 0; k < TRAIN_SIZE; k++) {
-                    X[j][k] -= X[i][k] * buf;
-                    Xinv[j][k] -= Xinv[i][k] * buf;
+        for (int j = TRAIN_SIZE; j < 2 * TRAIN_SIZE; j++) {
+            augmented[i][j] = (i == j - TRAIN_SIZE) ? 1.0 : 0.0; // ’PˆÊs—ñ
+        }
+    }
+
+    // ƒKƒEƒXEƒWƒ‡ƒ‹ƒ_ƒ“–@‚Ì“K—p
+    for (int i = 0; i < TRAIN_SIZE; i++) {
+        // ƒsƒ{ƒbƒg‚Ì‘I‘ği‘ÎŠp¬•ª‚ª0‚Ìê‡‚És‚ğ“ü‚ê‘Ö‚¦‚éj
+        if (fabs(augmented[i][i]) < 1e-9) {
+            int swap_row = -1;
+            for (int k = i + 1; k < TRAIN_SIZE; k++) {
+                if (fabs(augmented[k][i]) > 1e-9) {
+                    swap_row = k;
+                    break;
                 }
+            }
+            if (swap_row == -1) {
+                return 0; // ‹ts—ñ‚È‚µis—ñ‚ª“ÁˆÙj
+            }
+            // s‚ğŒğŠ·
+            for (int j = 0; j < 2 * TRAIN_SIZE; j++) {
+                double temp = augmented[i][j];
+                augmented[i][j] = augmented[swap_row][j];
+                augmented[swap_row][j] = temp;
+            }
+        }
+
+        // ‘ÎŠp¬•ª‚ğ1‚É‚·‚é
+        temp = augmented[i][i];
+        for (int j = 0; j < 2 * TRAIN_SIZE; j++) {
+            augmented[i][j] /= temp;
+        }
+
+        // ‘¼‚Ìs‚ÌŠY“–—ñ‚ğ0‚É‚·‚é
+        for (int k = 0; k < TRAIN_SIZE; k++) {
+            if (k == i) continue;
+            temp = augmented[k][i];
+            for (int j = 0; j < 2 * TRAIN_SIZE; j++) {
+                augmented[k][j] -= augmented[i][j] * temp;
             }
         }
     }
+
+    // ‹ts—ñ‚ğæ“¾
+    for (int i = 0; i < TRAIN_SIZE; i++) {
+        for (int j = 0; j < TRAIN_SIZE; j++) {
+            inverse[i][j] = augmented[i][j + TRAIN_SIZE];
+        }
+    }
+
+    return 1; // ‹ts—ñ‚ª‹‚ß‚ç‚ê‚½
 }
 
-// LUåˆ†è§£ã‚’è¡Œã„ã€è¡Œåˆ—å¼ã‚’è¨ˆç®—ã™ã‚‹//
+//int inverse_matrix(double X[TRAIN_SIZE][TRAIN_SIZE], double Xinv[TRAIN_SIZE][TRAIN_SIZE]) {
+//    //void Inverse(double X[dim][dim], double Xinv[dim][dim]) {
+//    double buf = 0.0;
+//    //‘|‚«o‚µ–@
+//    for (int i = 0; i < TRAIN_SIZE; i++) {
+//        buf = 1 / X[i][i];
+//        for (int j = 0; j < TRAIN_SIZE; j++) {
+//            X[i][j] *= buf;
+//            Xinv[i][j] *= buf;
+//        }
+//        for (int j = 0; j < TRAIN_SIZE; j++) {
+//            if (i != j) {
+//                buf = X[j][i];
+//                for (int k = 0; k < TRAIN_SIZE; k++) {
+//                    X[j][k] -= X[i][k] * buf;
+//                    Xinv[j][k] -= Xinv[i][k] * buf;
+//                }
+//            }
+//        }
+//    }
+//    return 1;
+//}
+
+// LU•ª‰ğ‚ğs‚¢As—ñ®‚ğŒvZ‚·‚é//
 double Determinant(double matrix[TRAIN_SIZE][TRAIN_SIZE]) {
     double U[TRAIN_SIZE][TRAIN_SIZE];
     int i, j, k;
-    int swap_count = 0;  // è¡Œã®äº¤æ›å›æ•°ï¼ˆè¡Œåˆ—å¼ã®ç¬¦å·ã‚’æ±ºå®šï¼‰
+    int swap_count = 0;  // s‚ÌŒğŠ·‰ñ”is—ñ®‚Ì•„†‚ğŒˆ’èj
 
     //printf("Called!\n");
 
-    // U ã‚’åˆæœŸåŒ–ï¼ˆå…ƒã®è¡Œåˆ—ã‚’ã‚³ãƒ”ãƒ¼ï¼‰
+    // U ‚ğ‰Šú‰»iŒ³‚Ìs—ñ‚ğƒRƒs[j
     for (i = 0; i < TRAIN_SIZE; i++) {
         for (j = 0; j < TRAIN_SIZE; j++) {
             U[i][j] = matrix[i][j];
         }
     }
 
-    // LUåˆ†è§£ï¼ˆã‚¬ã‚¦ã‚¹æ¶ˆå»æ³•ï¼‰
+    // LU•ª‰ğiƒKƒEƒXÁ‹–@j
     for (i = 0; i < TRAIN_SIZE - 1; i++) {
-        // ãƒ”ãƒœãƒƒãƒˆé¸æŠï¼ˆ0å›é¿ï¼‰
+        // ƒsƒ{ƒbƒg‘I‘ği0‰ñ”ğj
         if (fabs(U[i][i]) < 1e-9) {
             int swap_row = -1;
             for (k = i + 1; k < TRAIN_SIZE; k++) {
@@ -245,18 +244,18 @@ double Determinant(double matrix[TRAIN_SIZE][TRAIN_SIZE]) {
                 }
             }
             if (swap_row == -1) {
-                return 0.0; // é€†è¡Œåˆ—ãŒå­˜åœ¨ã—ãªã„ï¼ˆè¡Œåˆ—å¼ = 0ï¼‰
+                return 0.0; // ‹ts—ñ‚ª‘¶İ‚µ‚È‚¢is—ñ® = 0j
             }
-            // è¡Œã®äº¤æ›
+            // s‚ÌŒğŠ·
             for (j = 0; j < TRAIN_SIZE; j++) {
                 double temp = U[i][j];
                 U[i][j] = U[swap_row][j];
                 U[swap_row][j] = temp;
             }
-            swap_count++;  // è¡Œã‚’äº¤æ›ã—ãŸå›æ•°ã‚’è¨˜éŒ²
+            swap_count++;  // s‚ğŒğŠ·‚µ‚½‰ñ”‚ğ‹L˜^
         }
 
-        // å‰é€²æ¶ˆå»
+        // ‘OiÁ‹
         for (j = i + 1; j < TRAIN_SIZE; j++) {
             double factor = U[j][i] / U[i][i];
             for (k = i; k < TRAIN_SIZE; k++) {
@@ -265,17 +264,17 @@ double Determinant(double matrix[TRAIN_SIZE][TRAIN_SIZE]) {
         }
     }
 
-    // è¡Œåˆ—å¼ã¯ U ã®å¯¾è§’æˆåˆ†ã®ç©
+    // s—ñ®‚Í U ‚Ì‘ÎŠp¬•ª‚ÌÏ
     double det = 1.0;
     for (i = 0; i < TRAIN_SIZE; i++) {
         det *= U[i][i];
     }
 
-    // è¡Œäº¤æ›ãŒå¥‡æ•°å›ãªã‚‰ç¬¦å·ã‚’åè»¢
+    // sŒğŠ·‚ªŠï”‰ñ‚È‚ç•„†‚ğ”½“]
     return (swap_count % 2 == 0) ? det : -det;
 }
 
-// ãƒ™ã‚¯ãƒˆãƒ«ã®å†…ç©
+// ƒxƒNƒgƒ‹‚Ì“àÏ
 double dot_product(double a[PARAM][1], double b[PARAM][1]) {
     double sum = 0.0;
     for (int i = 0; i < PARAM; i++) {
@@ -284,14 +283,14 @@ double dot_product(double a[PARAM][1], double b[PARAM][1]) {
     return sum;
 }
 
-// ãƒ™ã‚¯ãƒˆãƒ«ã®ã‚¹ã‚«ãƒ©ãƒ¼å€
+// ƒxƒNƒgƒ‹‚ÌƒXƒJƒ‰[”{
 void scalar_mult(double vec[PARAM][1], double scalar, double result[PARAM][1]) {
     for (int i = 0; i < PARAM; i++) {
         result[i][0] = vec[i][0] * scalar;
     }
 }
 
-// ãƒ™ã‚¯ãƒˆãƒ«ã®åŠ ç®—
+// ƒxƒNƒgƒ‹‚Ì‰ÁZ
 void vector_add(double a[PARAM][1], double b[PARAM][1], double result[PARAM][1]) {
     for (int i = 0; i < PARAM; i++) {
         result[i][0] = a[i][0] + b[i][0];

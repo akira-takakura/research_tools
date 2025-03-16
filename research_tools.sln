@@ -13,6 +13,8 @@ Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Offline_Lasso", "Offline_La
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Gaussian_process_regression", "Gaussian_process_regression\Gaussian_process_regression.vcxproj", "{F4D3452B-56C1-46F6-A5DC-33E7E9D42899}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Gaussian_process_regression_test", "Gaussian_process_regression_test\Gaussian_process_regression_test.vcxproj", "{29C3595C-5DE5-436B-B7B6-2B48BED8E89C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,6 +73,18 @@ Global
 		{F4D3452B-56C1-46F6-A5DC-33E7E9D42899}.Release|x64.Build.0 = Release|x64
 		{F4D3452B-56C1-46F6-A5DC-33E7E9D42899}.Release|x86.ActiveCfg = Release|Win32
 		{F4D3452B-56C1-46F6-A5DC-33E7E9D42899}.Release|x86.Build.0 = Release|Win32
+		{29C3595C-5DE5-436B-B7B6-2B48BED8E89C}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{29C3595C-5DE5-436B-B7B6-2B48BED8E89C}.Debug|Any CPU.Build.0 = Debug|x64
+		{29C3595C-5DE5-436B-B7B6-2B48BED8E89C}.Debug|x64.ActiveCfg = Debug|x64
+		{29C3595C-5DE5-436B-B7B6-2B48BED8E89C}.Debug|x64.Build.0 = Debug|x64
+		{29C3595C-5DE5-436B-B7B6-2B48BED8E89C}.Debug|x86.ActiveCfg = Debug|Win32
+		{29C3595C-5DE5-436B-B7B6-2B48BED8E89C}.Debug|x86.Build.0 = Debug|Win32
+		{29C3595C-5DE5-436B-B7B6-2B48BED8E89C}.Release|Any CPU.ActiveCfg = Release|x64
+		{29C3595C-5DE5-436B-B7B6-2B48BED8E89C}.Release|Any CPU.Build.0 = Release|x64
+		{29C3595C-5DE5-436B-B7B6-2B48BED8E89C}.Release|x64.ActiveCfg = Release|x64
+		{29C3595C-5DE5-436B-B7B6-2B48BED8E89C}.Release|x64.Build.0 = Release|x64
+		{29C3595C-5DE5-436B-B7B6-2B48BED8E89C}.Release|x86.ActiveCfg = Release|Win32
+		{29C3595C-5DE5-436B-B7B6-2B48BED8E89C}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -54,29 +54,45 @@ void Gnuplot(char* name, double t_end) {
 	fprintf(gp, "set xrange [%lf:%lf]\n", 0.0, 8.0);
 	fprintf(gp, "set yrange [%lf:%lf]\n", 0.0, 24.0);
 	fprintf(gp, "plot f using 2 : 12 w l lw 1 lc 'red' notitle, f using 3 : 13 w l lw 1 lc 'red' notitle, f using 4 : 14 w l lw 1 lc 'red' notitle, f using 5 : 15 w l lw 1 lc 'red' notitle, f using 6 : 16 w l lw 1 lc 'red' title 'Data', f using 17 : 19 w l lw 1 lc 'blue' title 'GPR'\ \n");
-
+	
 	// ハイパーパラメータ推移 (位置)
 	fprintf(gp, "set output '%s%s%s'\n", OUTPUT_DIRECTORY, "hyperparam_posi", FIG_EXTENSION);
 	fprintf(gp, "set xlabel '%s' font %s\n", "Time [s]", FONT);
-	fprintf(gp, "set ylabel '%s' font %s\n", "Theta Position", FONT);
+	fprintf(gp, "set ylabel '%s' font %s\n", "Theta (Position)", FONT);
 	fprintf(gp, "set xrange [%lf:%lf]\n", 0.0, t_end);
-	fprintf(gp, "set yrange [%lf:%lf]\n", -30.0, 30.0);
-	fprintf(gp, "plot f using 1 : 22 w l lw 1 lc 'red' title 'theta1', f using 1 : 23 w l lw 1 lc 'green' title 'theta2', f using 1 : 24 w l lw 1 lc 'blue' title 'theta3'\ \n");
+	fprintf(gp, "set yrange [%lf:%lf]\n", -10.0, 600.0);
+	fprintf(gp, "plot f using 1 : 22 w l lw 1 lc 'red' title 'theta(1)', f using 1 : 23 w l lw 1 lc 'green' title 'theta(2)', f using 1 : 24 w l lw 1 lc 'blue' title 'theta(3)'\ \n");
 
 	// ハイパーパラメータ推移 (力)
 	fprintf(gp, "set output '%s%s%s'\n", OUTPUT_DIRECTORY, "hyperparam_force", FIG_EXTENSION);
 	fprintf(gp, "set xlabel '%s' font %s\n", "Time [s]", FONT);
-	fprintf(gp, "set ylabel '%s' font %s\n", "Theta Force", FONT);
+	fprintf(gp, "set ylabel '%s' font %s\n", "Theta (Force)", FONT);
+	fprintf(gp, "set xrange [%lf:%lf]\n", 0.0, t_end);
+	fprintf(gp, "set yrange [%lf:%lf]\n", -10.0, 500.0);
+	fprintf(gp, "plot f using 1 : 25 w l lw 1 lc 'red' title 'theta(1)', f using 1 : 26 w l lw 1 lc 'green' title 'theta(2)', f using 1 : 27 w l lw 1 lc 'blue' title 'theta(3)'\ \n");
+	
+	// ハイパーパラメータ微分 (位置)
+	fprintf(gp, "set output '%s%s%s'\n", OUTPUT_DIRECTORY, "hyperparam_diff_posi", FIG_EXTENSION);
+	fprintf(gp, "set xlabel '%s' font %s\n", "Time [s]", FONT);
+	fprintf(gp, "set ylabel '%s' font %s\n", "dTheta (Position)", FONT);
 	fprintf(gp, "set xrange [%lf:%lf]\n", 0.0, t_end);
 	fprintf(gp, "set yrange [%lf:%lf]\n", -10.0, 10.0);
-	fprintf(gp, "plot f using 1 : 25 w l lw 1 lc 'red' title 'theta1', f using 1 : 26 w l lw 1 lc 'green' title 'theta2', f using 1 : 27 w l lw 1 lc 'blue' title 'theta3'\ \n");
+	fprintf(gp, "plot f using 1 : 32 w l lw 1 lc 'red' title 'theta(1)', f using 1 : 33 w l lw 1 lc 'green' title 'theta(2)', f using 1 : 34 w l lw 1 lc 'blue' title 'theta(3)'\ \n");
+
+	// ハイパーパラメータ微分 (力)
+	fprintf(gp, "set output '%s%s%s'\n", OUTPUT_DIRECTORY, "hyperparam_diff_force", FIG_EXTENSION);
+	fprintf(gp, "set xlabel '%s' font %s\n", "Time [s]", FONT);
+	fprintf(gp, "set ylabel '%s' font %s\n", "dTheta (Force)", FONT);
+	fprintf(gp, "set xrange [%lf:%lf]\n", 0.0, t_end);
+	fprintf(gp, "set yrange [%lf:%lf]\n", -10.0, 10.0);
+	fprintf(gp, "plot f using 1 : 35 w l lw 1 lc 'red' title 'theta(1)', f using 1 : 36 w l lw 1 lc 'green' title 'theta(2)', f using 1 : 37 w l lw 1 lc 'blue' title 'theta(3)'\ \n");
 
 	// 分散
 	fprintf(gp, "set output '%s%s%s'\n", OUTPUT_DIRECTORY, "Variance", FIG_EXTENSION);
 	fprintf(gp, "set xlabel '%s' font %s\n", "Time [s]", FONT);
 	fprintf(gp, "set ylabel '%s' font %s\n", "Variance", FONT);
 	fprintf(gp, "set xrange [%lf:%lf]\n", 0.0, t_end);
-	fprintf(gp, "set yrange [%lf:%lf]\n", 0.0, 20.0);
+	fprintf(gp, "set yrange [%lf:%lf]\n", -10.0, 600.0);
 	fprintf(gp, "plot f using 1 : 28 w l lw 1 lc 'blue' title 'Position', f using 1 : 29 w l lw 1 lc 'green' title 'Force'\ \n");
 
 	// 尤度関数
@@ -84,7 +100,7 @@ void Gnuplot(char* name, double t_end) {
 	fprintf(gp, "set xlabel '%s' font %s\n", "Time [s]", FONT);
 	fprintf(gp, "set ylabel '%s' font %s\n", "Liklihood function", FONT);
 	fprintf(gp, "set xrange [%lf:%lf]\n", 0.0, t_end);
-	fprintf(gp, "set yrange [%lf:%lf]\n", -500.0, 500.0);
+	fprintf(gp, "set yrange [%lf:%lf]\n", -50.0, 0.0);
 	fprintf(gp, "plot f using 1 : 30 w l lw 1 lc 'blue' title 'Position', f using 1 : 31 w l lw 1 lc 'green' title 'Force'\ \n");
 
 	/* 終了コマンド */
